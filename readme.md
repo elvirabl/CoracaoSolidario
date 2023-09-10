@@ -32,15 +32,6 @@ $ npm install
 ## Executar o servidor  
 $ npm start  
 ## Getter´s e Setter´s  
-GET - https://buscandosonhos.onrender.com/buscandosonhos/ancestor/all  
-GET - https://buscandosonhos.onrender.com/buscandosonhos/ancestor/ID  
-GET - https://buscandosonhos.onrender.com/buscandosonhos/members/all  
-GET - https://buscandosonhos.onrender.com/buscandosonhos/members/ID  
-POST - https://buscandosonhos.onrender.com/buscandosonhos/ancestor/add/  
-POST - https://buscandosonhos.onrender.com/buscandosonhos/members/add  
-PATCH - https://buscandosonhos.onrender.com/buscandosonhos/members/ID  
-PATCH - https://buscandosonhos.onrender.com/buscandosonhos/ancestor/ID  
-DELETE - https://buscandosonhos.onrender.com/buscandosonhos/members/ID   
  
 ## Gostaria de contribuir?  
 1. Fork o projeto;  
@@ -57,11 +48,10 @@ Gratidão a Grande Deusa que me guiou nessa grande aventura no mundo da programa
 ## MAPA
 
 coracaoSolidario/
-  └── src/
+  └── src/server
       ├── Usuario.js
       |── Doador.js
       |── Receptor.js
-      |── Server.js
          └── Index.js/
 
 Usuario: Uma classe base que contém informações comuns a todos os usuários (nome, contato, tipo(doador ou receptor), região(mostra onde está o doador que tem o tipo de curativo igual solicitado pelo Receptor , tipo de curativo (string), id). Doador: Uma subclasse de Usuariométodos e propriedades específicas para doadores.(solicita tipo de decorativo e se liga ao receptor por tipo igual de utilitário e igual região, o doador pode se tornar Receptor) Receptor: Uma subclasse de Usuariométodos e propriedades específicas para doadores.( se liga ao receptor por tipo igual de curativo e igual região, o Receptor pode se tornar Doador) Organizado no sistema SRC (modelos, controlador e rotas)
