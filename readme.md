@@ -1,4 +1,5 @@
-Coração Solidário - Uma melhor qualidade de vida as GUERREIRAS !!! Contra o câncer de mama.
+# Coração Solidário
+## Uma melhor qualidade de vida as GUERREIRAS !!! Contra o câncer de mama.
 
 ![Alt text](../coracao.png)
 
@@ -12,11 +13,36 @@ Cadastro de receptor e doador, herdando dados de uma classe cadastro único. Pen
 controle com sistema PEPS de receptores aos curativos disponíveis, autenticação por senha(gerada pelo ambulatório médico)
 
 Para o futuro, monetizar vendendo espaço para empresas parceiras como farmácias, consultórios, clínicas, industria farmacêutica.
-## Tecnologias utilizadas  
+## Tecnologias utilizadas 
 • Node.js  
 • Jest  
 • Git  
-## Pacotes utilizados para conecxão com a API 
+
+## Instruções de instalação  
+## Clonar o repositório
+$ git clone https://github.com/elvirabl/CoracaoSolidario
+## Instalar as dependências  
+$ npm install  
+## Executar o servidor  
+$ npm start  
+## Getter´s e Setter´s
+### Getter´s
+-Nome
+-Contato
+-Tipo (receptor ou doador)
+-Região
+-Tipo de curativo
+### Setter´s
+-Nome
+-Contato
+-Tipo (receptor ou doador)
+-Região
+-Tipo de curativo
+
+### Código da API
+#### Link da API
+https://github.com/elvirabl/Coracao-Solidario
+#### Pacotes utilizados para conecxão com a API 
 • express  
 • nodemon  
 • dotenv-safe  
@@ -24,34 +50,23 @@ Para o futuro, monetizar vendendo espaço para empresas parceiras como farmácia
 • cors  
 • save  
 
-# Instruções de instalação  
-## Clonar o repositório
-$ git clone https://github.com/elvirabl/CoracaoSolidario
-## Instalar as dependências  
-$ npm install  
-## Executar o servidor  
-$ npm start  
-## Getter´s e Setter´s  
- 
-## Gostaria de contribuir?  
+#### Gostaria de contribuir?  
 1. Fork o projeto;  
 2. Crie uma branch para realizar suas alterações: git checkout -b feature/nome-da-sua-branch  
 3. Commit suas alterações e abra um pull request  
 
-## Agradecimentos
+#### Agradecimentos
 Agradeço a todas as profissionais da equipe Reprograma, em especial a Sra. Raquel, facilitadora, a Sra. Camila, professora, a Sra. Louse Costa, que me inspirou a continuar.  
-Gratidão a minha grande amiga Graice Pereira Giacomelli, que me auxiliou em cada momento difícil.  
+Gratidão a minha grandes amigas Graice Pereira Giacomelli e Luciana Sá, que me auxiliou em cada momento difícil.  
 Gratidão a minha família (humana e pet), que nunca me abandonou.  
 Gratidão a Grande Deusa que me guiou nessa grande aventura no mundo da programação.  
 
-
-## MAPA
+#### MAPA
 
 coracaoSolidario/
-  └── src/server
+  └── src/
       ├── Usuario.js
       |── Doador.js
       |── Receptor.js
+      |── Server.js
          └── Index.js/
-
-Usuario: Uma classe base que contém informações comuns a todos os usuários (nome, contato, tipo(doador ou receptor), região(mostra onde está o doador que tem o tipo de curativo igual solicitado pelo Receptor , tipo de curativo (string), id). Doador: Uma subclasse de Usuariométodos e propriedades específicas para doadores.(solicita tipo de decorativo e se liga ao receptor por tipo igual de utilitário e igual região, o doador pode se tornar Receptor) Receptor: Uma subclasse de Usuariométodos e propriedades específicas para doadores.( se liga ao receptor por tipo igual de curativo e igual região, o Receptor pode se tornar Doador) Organizado no sistema SRC (modelos, controlador e rotas)
