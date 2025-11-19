@@ -1,0 +1,132 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Quero doar um kit • Coração Solidário</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #ffeef5;
+            font-family: 'Segoe UI', sans-serif;
+            color: #333;
+        }
+        .page {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .logo {
+            display: block;
+            width: 140px;
+            margin: 10px auto 10px auto;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 18px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.06);
+            margin-top: 10px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+        p.subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            margin-top: 12px;
+            margin-bottom: 4px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .btn-primary {
+            margin-top: 18px;
+            width: 100%;
+            padding: 14px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(90deg,#ff5f9a,#d15bff);
+            color: white;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 14px;
+            font-size: 14px;
+            color: #d15bff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <img src="{% static 'core/logo-coracao-solidario.png' %}" alt="Coração Solidário" class="logo">
+
+    <div class="card">
+        <h1>Quero doar um kit 💝</h1>
+        <p class="subtitle">
+            Preencha seus dados e vamos conectar você com uma mulher
+            em tratamento pelo posto de referência do seu bairro.
+        </p>
+
+        <!-- por enquanto o form é só visual; depois ligamos no backend -->
+        <form method="post">
+            {% csrf_token %}
+            <label for="name">Nome completo</label>
+            <input id="name" name="name" type="text" required>
+
+            <label for="whatsapp">WhatsApp</label>
+            <input id="whatsapp" name="whatsapp" type="tel" required>
+
+            <label for="city">Cidade</label>
+            <input id="city" name="city" type="text" required>
+
+            <label for="neighborhood">Bairro</label>
+            <input id="neighborhood" name="neighborhood" type="text" required>
+
+            <label for="kit">Que tipo de kit você deseja doar?</label>
+            <select id="kit" name="preferred_kit">
+                <option value="">Selecione...</option>
+                <option value="KIT_BASICO">Kit Básico</option>
+                <option value="KIT_BASICO_ALERGICA">Kit Básico Alérgica</option>
+                <option value="KIT_COMPLETO">Kit Completo</option>
+                <option value="KIT_COMPLETO_ALERGICA">Kit Completo Alérgica</option>
+            </select>
+
+            <label for="reference_post">Posto de referência (se já souber)</label>
+            <select id="reference_post" name="reference_post">
+                <option value="">Não sei / quero ajuda para definir</option>
+                {% for p in reference_posts %}
+                    <option value="{{ p.id }}">{{ p.name }} – {{ p.city }}</option>
+                {% endfor %}
+            </select>
+
+            <button class="btn-primary" type="submit">
+                Enviar meu interesse em doar
+            </button>
+        </form>
+
+        <a href="/" class="back-link">← Voltar para a página inicial</a>
+    </div>
+</div>
+</body>
+</html>

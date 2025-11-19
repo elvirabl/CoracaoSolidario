@@ -1,0 +1,129 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Quero doar um kit • Coração Solidário</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body { margin:0; padding:20px; background:#ffeef5; font-family:Segoe UI, sans-serif;}
+        .page { max-width:480px; margin:0 auto; }
+        .card {
+            background:#fff;
+            padding:20px;
+            border-radius:18px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.06);
+        }
+        .logo { display:block; width:140px; margin:0 auto 10px auto; }
+        h1 { text-align:center; font-size:20px; color:#e46ba0; margin-bottom:5px;}
+        p.subtitle { text-align:center; font-size:13px; color:#555; margin-bottom:15px; }
+        label { display:block; margin-top:12px; font-weight:600; font-size:14px;}
+        input, select {
+            width:100%; padding:9px; margin-top:4px;
+            border-radius:8px; border:1px solid #ddd; font-size:14px;
+        }
+        .field-help { font-size:11px; color:#777; }
+        button {
+            margin-top:18px; width:100%; padding:11px;
+            border:none; border-radius:999px;
+            background:linear-gradient(135deg,#ff5f9a,#d15bff);
+            color:#fff; font-weight:600; font-size:15px; cursor:pointer;
+        }
+        .msg-ok {
+            background:#eafaf1; border-left:4px solid #2ecc71;
+            padding:10px 12px; border-radius:8px; font-size:13px; margin-bottom:10px;
+        }
+        .msg-erro {
+            background:#fdecea; border-left:4px solid #e74c3c;
+            padding:10px 12px; border-radius:8px; font-size:13px; margin-bottom:10px;
+        }
+        ul.erros { padding-left:20px; margin:4px 0 0 0; }
+        a.voltar {
+            display:inline-block; margin-top:10px; font-size:13px; color:#777;
+            text-decoration:none;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="card">
+        <img src="{% static 'core/logo-coracao-solidario.png' %}" alt="Coração Solidário" class="logo">
+        <h1>Quero doar um kit 💝</h1>
+        <p class="subtitle">
+            Preencha seus dados para que possamos conectar você a uma receptora pelo posto do seu bairro.
+        </p>
+
+        {% if saved %}
+            <div class="msg-ok">
+                Obrigada, {{ name }}! Seu cadastro como <strong>doadora</strong> foi recebido com carinho.
+                Nossa equipe fará o match e entrará em contato pelo WhatsApp quando houver uma receptora.
+            </div>
+        {% endif %}
+
+        {% if errors %}
+            <div class="msg-erro">
+                Por favor, confira os campos abaixo:
+                <ul class="erros">
+                    {% for e in errors %}
+                        <li>{{ e }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <label for="id_name">Nome completo</label>
+            <input id="id_name" name="name" type="text"
+                   value="{{ form.name|default_if_none:'' }}">
+
+            <label for="id_whatsapp">WhatsApp</label>
+            <input id="id_whatsapp" name="whatsapp" type="text"
+                   value="{{ form.whatsapp|default_if_none:'' }}">
+            <div class="field-help">Use DDD + número. Ex.: 15 9xxxx-xxxx</div>
+
+            <label for="id_city">Cidade</label>
+            <input id="id_city" name="city" type="text"
+                   value="{{ form.city|default_if_none:'' }}">
+
+            <label for="id_neighborhood">Bairro</label>
+            <input id="id_neighborhood" name="neighborhood" type="text"
+                   value="{{ form.neighborhood|default_if_none:'' }}">
+
+            <label for="id_preferred_kit">Tipo de kit que deseja doar</label>
+            <select id="id_preferred_kit" name="preferred_kit">
+                <option value="">Selecione (opcional)</option>
+                <option value="KIT_BASICO"
+                    {% if form.preferred_kit == "KIT_BASICO" %}selected{% endif %}>
+                    Kit Básico
+                </option>
+                <option value="KIT_BASICO_ALERGICA"
+                    {% if form.preferred_kit == "KIT_BASICO_ALERGICA" %}selected{% endif %}>
+                    Kit Básico Alérgica
+                </option>
+                <option value="KIT_COMPLETO"
+                    {% if form.preferred_kit == "KIT_COMPLETO" %}selected{% endif %}>
+                    Kit Completo
+                </option>
+                <option value="KIT_COMPLETO_ALERGICA"
+                    {% if form.preferred_kit == "KIT_COMPLETO_ALERGICA" %}selected{% endif %}>
+                    Kit Completo Alérgica
+                </option>
+            </select>
+
+            <label>
+                <input type="checkbox" name="allow_whatsapp"
+                    {% if form.allow_whatsapp %}checked{% endif %}>
+                Autorizo contato pelo WhatsApp sobre este projeto.
+            </label>
+
+            <button type="submit">Enviar cadastro</button>
+        </form>
+
+        <a href="{% url 'home' %}" class="voltar">← Voltar para a página inicial</a>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<title>Obrigada 💗</title>
+<style>
+body {
+    background: #ffeef5;
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+.page {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    text-align: center;
+}
+.big-heart {
+    font-size: 80px;
+}
+.msg {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+.sub {
+    font-size: 15px;
+    margin-top: 10px;
+    color: #555;
+}
+.btn {
+    display: block;
+    margin: 30px auto 0;
+    background: #e46ba0;
+    padding: 14px 20px;
+    border-radius: 999px;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    width: 70%;
+}
+</style>
+</head>
+<body>
+<div class="page">
+    <div class="big-heart">💗</div>
+
+    {% if tipo == "doadora" %}
+        <div class="msg">Obrigada por querer ajudar! 🌸</div>
+        <div class="sub">
+            Sua intenção de doação foi registrada.  
+            Nossa equipe fará a conexão com uma receptora do seu bairro.
+        </div>
+    {% else %}
+        <div class="msg">Recebemos seu pedido com carinho 🤍</div>
+        <div class="sub">
+            Vamos buscar uma doação próxima ao seu posto de referência.
+        </div>
+    {% endif %}
+
+    <a href="/" class="btn">Voltar para a página inicial</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Relatórios do Coração Solidário{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 style="margin-bottom: 16px;">{{ title }}</h1>
+
+  <div class="module">
+    <h2>Indicadores gerais</h2>
+    <table>
+      <tbody>
+        <tr><th>Doadoras ativas</th><td>{{ totals.donors_active }}</td></tr>
+        <tr><th>Receptoras ativas</th><td>{{ totals.receivers_active }}</td></tr>
+        <tr><th>Total de matches</th><td>{{ totals.matches_total }}</td></tr>
+        <tr><th>Entregues</th><td>{{ totals.matches_delivered }}</td></tr>
+        <tr><th>Pendentes</th><td>{{ totals.matches_pending }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="module" style="margin-top: 16px;">
+    <h2>Matches por tipo de kit</h2>
+    <table>
+      <thead>
+        <tr><th>Kit</th><th>Total</th></tr>
+      </thead>
+      <tbody>
+        {% for row in kits %}
+          <tr>
+            <td>{{ row.kit_type }}</td>
+            <td>{{ row.total }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="2">Sem dados ainda.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="module" style="margin-top: 16px;">
+    <h2>Matches por status</h2>
+    <table>
+      <thead>
+        <tr><th>Status</th><th>Total</th></tr>
+      </thead>
+      <tbody>
+        {% for row in status %}
+          <tr>
+            <td>{{ row.status }}</td>
+            <td>{{ row.total }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="2">Sem dados ainda.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="module" style="margin-top: 16px;">
+    <h2>Últimos 10 matches</h2>
+    <table>
+      <thead>
+        <tr><th>Data</th><th>Doadora</th><th>Receptora</th><th>Kit</th><th>Qtd</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for m in recent %}
+          <tr>
+            <td>{{ m.created_at|date:"d/m/Y H:i" }}</td>
+            <td>{{ m.donor.name }}</td>
+            <td>{{ m.receiver.name }}</td>
+            <td>{{ m.kit_type }}</td>
+            <td>{{ m.quantity }}</td>
+            <td>{{ m.status }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6">Sem registros ainda.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top: 16px;">
+    <a class="button" href="{% url 'admin-reports-csv' %}">Baixar CSV</a>
+    <a class="button" href="/admin/">Voltar ao Admin</a>
+  </p>
+</div>
+{% endblock %}

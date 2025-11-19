@@ -1,0 +1,123 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Preciso receber um kit • Coração Solidário</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body { margin:0; padding:20px; background:#ffeef5; font-family:Segoe UI, sans-serif;}
+        .page { max-width:480px; margin:0 auto; }
+        .card {
+            background:#fff;
+            padding:20px;
+            border-radius:18px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.06);
+        }
+        .logo { display:block; width:140px; margin:0 auto 10px auto; }
+        h1 { text-align:center; font-size:20px; color:#e46ba0; margin-bottom:5px;}
+        p.subtitle { text-align:center; font-size:13px; color:#555; margin-bottom:15px; }
+        label { display:block; margin-top:12px; font-weight:600; font-size:14px;}
+        input, select {
+            width:100%; padding:9px; margin-top:4px;
+            border-radius:8px; border:1px solid #ddd; font-size:14px;
+        }
+        button {
+            margin-top:18px; width:100%; padding:11px;
+            border:none; border-radius:999px;
+            background:#e46ba0;
+            color:#fff; font-weight:600; font-size:15px; cursor:pointer;
+        }
+        .msg-ok {
+            background:#eafaf1; border-left:4px solid #2ecc71;
+            padding:10px 12px; border-radius:8px; font-size:13px; margin-bottom:10px;
+        }
+        .msg-erro {
+            background:#fdecea; border-left:4px solid #e74c3c;
+            padding:10px 12px; border-radius:8px; font-size:13px; margin-bottom:10px;
+        }
+        ul.erros { padding-left:20px; margin:4px 0 0 0; }
+        a.voltar {
+            display:inline-block; margin-top:10px; font-size:13px; color:#777;
+            text-decoration:none;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="card">
+        <img src="{% static 'core/logo-coracao-solidario.png' %}" alt="Coração Solidário" class="logo">
+        <h1>Preciso receber um kit 🤍</h1>
+        <p class="subtitle">
+            Este espaço é para mulheres em pós-cirurgia ou tratamento de câncer de mama
+            que precisam de um kit de cuidado. Seus dados são tratados com sigilo.
+        </p>
+
+        {% if saved %}
+            <div class="msg-ok">
+                {{ name }}, recebemos o seu pedido com carinho.  
+                Nossa equipe vai verificar a disponibilidade de kits no seu bairro
+                e entrará em contato pelo WhatsApp.
+            </div>
+        {% endif %}
+
+        {% if errors %}
+            <div class="msg-erro">
+                Por favor, confira os campos abaixo:
+                <ul class="erros">
+                    {% for e in errors %}
+                        <li>{{ e }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <label for="id_name">Nome completo</label>
+            <input id="id_name" name="name" type="text"
+                   value="{{ form.name|default_if_none:'' }}">
+
+            <label for="id_whatsapp">WhatsApp</label>
+            <input id="id_whatsapp" name="whatsapp" type="text"
+                   value="{{ form.whatsapp|default_if_none:'' }}">
+
+            <label for="id_city">Cidade</label>
+            <input id="id_city" name="city" type="text"
+                   value="{{ form.city|default_if_none:'' }}">
+
+            <label for="id_neighborhood">Bairro</label>
+            <input id="id_neighborhood" name="neighborhood" type="text"
+                   value="{{ form.neighborhood|default_if_none:'' }}">
+
+            <label for="id_needed_kit">Kit necessário</label>
+            <select id="id_needed_kit" name="needed_kit">
+                <option value="">Selecione</option>
+                <option value="KIT_BASICO"
+                    {% if form.needed_kit == "KIT_BASICO" %}selected{% endif %}>
+                    Kit Básico
+                </option>
+                <option value="KIT_BASICO_ALERGICA"
+                    {% if form.needed_kit == "KIT_BASICO_ALERGICA" %}selected{% endif %}>
+                    Kit Básico Alérgica
+                </option>
+                <option value="KIT_COMPLETO"
+                    {% if form.needed_kit == "KIT_COMPLETO" %}selected{% endif %}>
+                    Kit Completo
+                </option>
+                <option value="KIT_COMPLETO_ALERGICA"
+                    {% if form.needed_kit == "KIT_COMPLETO_ALERGICA" %}selected{% endif %}>
+                    Kit Completo Alérgica
+                </option>
+            </select>
+
+            <button type="submit">Enviar pedido</button>
+        </form>
+
+        <a href="{% url 'home' %}" class="voltar">← Voltar para a página inicial</a>
+    </div>
+</div>
+</body>
+</html>

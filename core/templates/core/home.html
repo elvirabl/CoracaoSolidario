@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coração Solidário</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #ffeef5;
+            font-family: 'Segoe UI', sans-serif;
+            color: #333;
+        }
+
+        .page {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .logo {
+            display: block;
+            width: 160px;
+            margin: 10px auto 20px auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+            margin-top: -5px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 18px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.06);
+            margin-top: 20px;
+        }
+
+        .btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 14px;
+            margin: 12px 0;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            text-align: center;
+}
+
+        .btn-primary {
+            background: linear-gradient(90deg, #ff5f9a, #d15bff);
+            color: white;
+        }
+
+        .btn-secondary {
+            border: 2px solid #d15bff;
+            color: #d15bff;
+            background: white;
+        }
+
+        .btn-outline {
+            background: #eef1ff;
+            color: #333;
+            font-size: 15px;
+        }
+
+        .howto-card {
+            background: white;
+            padding: 20px;
+            border-radius: 18px;
+            margin-top: 20px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.05);
+        }
+
+        .howto-item {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .howto-number {
+            background: #5d7dff;
+            color: white;
+            font-weight: bold;
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 12px;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 50px;
+            color: #666;
+        }
+
+        .whatsapp-fab {
+            position: fixed;
+            right: 15px;
+            bottom: 15px;
+            background: #25D366;
+            padding: 14px;
+            border-radius: 50%;
+            box-shadow: 0 0 12px rgba(0,0,0,0.2);
+        }
+
+        .whatsapp-fab img {
+            width: 26px;
+        }
+
+    </style>
+</head>
+
+<body>
+<div class="page">
+
+    <!-- TESTE DO LOGO COM FUNDO BRANCO -->
+    <div style="background:white; padding:20px; border-radius:20px;">
+        <img src="{% static 'core/logo-coracao-solidario.png' %}" 
+            alt="Coração Solidário" 
+            style="width:200px;">
+    </div>
+
+    <h1>Coração Solidário</h1>
+    <p class="subtitle">
+        Cuidando de mulheres em pós-cirurgia de câncer de mama, com kits de carinho e dignidade. 💗
+    </p>
+
+    <div class="card">
+        <h2>Como você quer participar hoje?</h2>
+        <p>
+            Você pode ser <strong>doadora</strong>, <strong>receptora</strong> ou as duas coisas.  
+            O Coração Solidário conecta mulheres pelo posto de referência do bairro.
+        </p>
+
+        <a href="/doar/" class="btn btn-primary">💝 Quero doar um kit</a>
+        <a href="/receber/" class="btn btn-secondary">♡ Preciso receber um kit</a>
+        <a href="/como-funciona/" class="btn btn-outline">ℹ️ Entender como funciona</a>
+    </div>
+
+    <div class="howto-card">
+        <h2>Como funciona na prática</h2>
+
+        <div class="howto-item">
+            <div class="howto-number">1</div>
+            <p><strong>Cadastro simples</strong><br>
+                Você informa apenas seus dados essenciais (nome, bairro e WhatsApp).
+            </p>
+        </div>
+
+        <div class="howto-item">
+            <div class="howto-number">2</div>
+            <p><strong>Match solidário</strong><br>
+                A equipe faz o match entre doadora e receptora pelo posto de referência.
+            </p>
+        </div>
+
+        <div class="howto-item">
+            <div class="howto-number">3</div>
+            <p><strong>Retirada com código</strong><br>
+                A receptora retira o kit na farmacinha do posto, usando um código de retirada.
+            </p>
+        </div>
+    </div>
+
+    <footer>
+        Projeto idealizado por mulheres, para mulheres.  
+        <br>
+        <a href="#" style="color:#d15bff;">Quero apoiar o Coração Solidário</a>
+    </footer>
+</div>
+
+<!-- BOTÃO FIXO DO WHATSAPP -->
+<a class="whatsapp-fab"
+   href="https://wa.me/5515974030492?text=Oi%2C%20conheci%20o%20Cora%C3%A7%C3%A3o%20Solid%C3%A1rio%20e%20quero%20saber%20mais."
+   target="_blank" rel="noopener">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+</a>
+
+</body>
+</html>
