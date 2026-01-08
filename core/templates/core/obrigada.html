@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Obrigada!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #ffeef5;
+            text-align: center;
+            padding: 40px;
+        }
+        h1 {
+            color: #e91e63;
+            font-size: 36px;
+        }
+        .box {
+            background: white;
+            padding: 30px;
+            margin: 40px auto;
+            border-radius: 12px;
+            max-width: 500px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        .emoji {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+        .msg {
+            font-size: 20px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <div class="emoji">💖</div>
+    <h1>Obrigada!</h1>
+
+    {% if tipo == "doadora" %}
+        <p class="msg">Seu cadastro como <strong>doadora</strong> foi realizado com sucesso!<br>
+        Assim que encontrarmos um receptor compatível, entraremos em contato.</p>
+    {% elif tipo == "receptora" %}
+        <p class="msg">Seu cadastro como <strong>receptora</strong> foi concluído!<br>
+        Assim que houver uma doação compatível, vamos te avisar.</p>
+    {% else %}
+        <p class="msg">Seu registro foi concluído com sucesso!</p>
+    {% endif %}
+</div>
+
+</body>
+</html>

@@ -29,7 +29,7 @@
       <tbody>
         {% for row in kits %}
           <tr>
-            <td>{{ row.kit_type }}</td>
+            <td>{{ row.donor__preferred_kit }}</td>
             <td>{{ row.total }}</td>
           </tr>
         {% empty %}
@@ -70,7 +70,7 @@
             <td>{{ m.created_at|date:"d/m/Y H:i" }}</td>
             <td>{{ m.donor.name }}</td>
             <td>{{ m.receiver.name }}</td>
-            <td>{{ m.kit_type }}</td>
+            <td>{{ m.donor.get_preferred_kit_display }}</td>
             <td>{{ m.quantity }}</td>
             <td>{{ m.status }}</td>
           </tr>
