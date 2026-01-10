@@ -1,19 +1,22 @@
-from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Count
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render, redirect
+from io import BytesIO
+
+import qrcode
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_GET
+from django.utils import timezone
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from .models import Match, Donor, Receiver, ReferencePost
+from .models import Donor, Match, Receiver, ReferencePost
 
 
+# ---------------- HOME ---------------- #
 def home(request):
     return render(request, "core/home.html")
 
 
-# --------- TELAS PÚBLICAS: DOAR / RECEBER --------- #
-
+# --------- TELAS PÚBLICAS: DOAR ---------------- #
+@require_http_methods(["GET", "POST"])
 def doar(request):
     reference_posts = ReferencePost.objects.filter(
         can_receive_donations=True,
@@ -21,25 +24,63 @@ def doar(request):
     ).order_by("city", "name")
 
     if request.method == "POST":
-        Donor.objects.create(
-            name=request.POST.get("name"),
-            whatsapp=request.POST.get("whatsapp"),
-            city=request.POST.get("city"),
-            neighborhood=request.POST.get("neighborhood"),
-            preferred_kit=request.POST.get("preferred_kit"),
-            reference_post_id=request.POST.get("reference_post"),
-            allow_whatsapp=True,
-            active=True,
+        name = (request.POST.get("name") or "").strip()
+        whatsapp = (request.POST.get("whatsapp") or "").strip()
+
+        # Aceita qualquer name usado no HTML
+        preferred_kit = (
+            request.POST.get("preferred_kit")
+            or request.POST.get("kit_type")
+            or request.POST.get("kit")
+            or ""
+        ).strip()
+
+        reference_post_id = (
+            request.POST.get("reference_post")
+            or request.POST.get("reference_post_id")
         )
 
-        url = reverse("obrigada") + "?tipo=doadora"
-        return redirect(url)
+        errors = []
+        if not name:
+            errors.append("Nome é obrigatório.")
+        if not whatsapp:
+            errors.append("WhatsApp é obrigatório.")
+        if not preferred_kit:
+            errors.append("Selecione o tipo de kit.")
+        if not reference_post_id:
+            errors.append("Selecione o posto de referência.")
 
-    return render(request, "core/doar.html", {
-        "reference_posts": reference_posts,
-    })
+        reference_post = None
+        if reference_post_id:
+            reference_post = ReferencePost.objects.filter(id=reference_post_id).first()
+            if not reference_post:
+                errors.append("Posto de referência inválido.")
+
+        if not errors:
+            Donor.objects.create(
+                name=name,
+                whatsapp=whatsapp,
+                preferred_kit=preferred_kit,
+                reference_post=reference_post,
+                active=True,
+            )
+            return render(request, "core/obrigada.html", {"tipo": "doacao"})
+
+        return render(
+            request,
+            "core/doar.html",
+            {
+                "reference_posts": reference_posts,
+                "errors": errors,
+                "form": request.POST,
+            },
+        )
+
+    return render(request, "core/doar.html", {"reference_posts": reference_posts})
 
 
+# --------- TELAS PÚBLICAS: RECEBER ---------------- #
+@require_http_methods(["GET", "POST"])
 def receber(request):
     reference_posts = ReferencePost.objects.filter(
         can_receive_donations=True,
@@ -47,172 +88,122 @@ def receber(request):
     ).order_by("city", "name")
 
     if request.method == "POST":
-        Receiver.objects.create(
-            name=request.POST.get("name"),
-            whatsapp=request.POST.get("whatsapp"),
-            city=request.POST.get("city"),
-            neighborhood=request.POST.get("neighborhood"),
-            needed_kit=request.POST.get("needed_kit"),
-            reference_post_id=request.POST.get("reference_post"),
-            is_breast_cancer_patient=bool(request.POST.get("is_breast_cancer_patient")),
-            active=True,
+        name = (request.POST.get("name") or "").strip()
+        whatsapp = (request.POST.get("whatsapp") or "").strip()
+
+        needed_kit = (
+            request.POST.get("needed_kit")
+            or request.POST.get("kit_type")
+            or request.POST.get("kit")
+            or ""
+        ).strip()
+
+        reference_post_id = (
+            request.POST.get("reference_post")
+            or request.POST.get("reference_post_id")
         )
 
-        url = reverse("obrigada") + "?tipo=receptora"
-        return redirect(url)
+        errors = []
+        if not name:
+            errors.append("Nome é obrigatório.")
+        if not whatsapp:
+            errors.append("WhatsApp é obrigatório.")
+        if not needed_kit:
+            errors.append("Selecione o tipo de kit.")
+        if not reference_post_id:
+            errors.append("Selecione o posto de referência.")
 
-    return render(request, "core/receber.html", {
-        "reference_posts": reference_posts,
-    })
+        reference_post = None
+        if reference_post_id:
+            reference_post = ReferencePost.objects.filter(id=reference_post_id).first()
+            if not reference_post:
+                errors.append("Posto de referência inválido.")
 
+        if not errors:
+            Receiver.objects.create(
+                name=name,
+                whatsapp=whatsapp,
+                needed_kit=needed_kit,
+                reference_post=reference_post,
+                active=True,
+            )
+            return render(request, "core/obrigada.html", {"tipo": "recebimento"})
 
-def obrigada(request):
-    tipo = request.GET.get("tipo")  # "doadora" ou "receptora"
-    return render(request, "core/obrigada.html", {"tipo": tipo})
-
-
-# --------- RELATÓRIOS DO ADMIN --------- #
-
-@staff_member_required
-def admin_reports(request):
-    # Totais por tipo de kit (baseado no kit da doadora)
-    kits = (
-        Match.objects.select_related("donor")
-        .values("donor__preferred_kit")
-        .annotate(total=Count("id"))
-        .order_by("-total")
-    )
-
-    # Lista simples para “auditoria”: quem com quem e qual kit
-    status = (
-        Match.objects.select_related("donor", "receiver")
-        .values(
-            "donor__name",
-            "receiver__name",
-            "donor__preferred_kit",
-            "is_completed",
-            "pickup_code",
-            "created_at",
+        return render(
+            request,
+            "core/receber.html",
+            {
+                "reference_posts": reference_posts,
+                "errors": errors,
+                "form": request.POST,
+            },
         )
-        .order_by("-created_at")[:200]
-    )
 
-    totals = {
-        "donors_active": Donor.objects.filter(active=True).count(),
-        "receivers_active": Receiver.objects.filter(active=True).count(),
-        "matches_total": Match.objects.count(),
-        "matches_delivered": Match.objects.filter(is_completed=True).count(),
-        "matches_pending": Match.objects.filter(is_completed=False).count(),
-    }
-
-    recent = (
-        Match.objects.select_related("donor", "receiver")
-        .order_by("-created_at")[:10]
-    )
-
-    ctx = {
-        "kits": kits,
-        "status": status,
-        "totals": totals,
-        "recent": recent,
-        "title": "Relatórios do Coração Solidário",
-    }
-    return render(request, "admin/reports.html", ctx)
+    return render(request, "core/receber.html", {"reference_posts": reference_posts})
 
 
-@staff_member_required
-def admin_reports_csv(request):
-    """
-    Exporta um CSV simples de matches (modelo atual).
-    """
-    rows = Match.objects.select_related("donor", "receiver").values_list(
-        "created_at",
-        "donor__name",
-        "receiver__name",
-        "donor__preferred_kit",
-        "pickup_code",
-        "is_completed",
-    )
-
-    def csv_escape(s):
-        if s is None:
-            return ""
-        s = str(s)
-        return '"' + s.replace('"', '""') + '"'
-
-    # Cabeçalho
-    content = ['"data","doadora","receptora","kit","codigo_retirada","retirado"']
-
-    for created_at, donor_name, receiver_name, kit_key, pickup_code, is_completed in rows:
-        # kit_key é tipo "basic", "complete" etc.
-        # Se quiser, dá pra traduzir aqui depois.
-        line = ",".join(csv_escape(x) for x in [
-            created_at,
-            donor_name,
-            receiver_name,
-            kit_key,
-            pickup_code,
-            "SIM" if is_completed else "NAO",
-        ])
-        content.append(line)
-
-    resp = HttpResponse("\n".join(content), content_type="text/csv; charset=utf-8")
-    resp["Content-Disposition"] = 'attachment; filename="relatorios_matches.csv"'
-    return resp
-
-
-# ----------------------------------------------------------- #
-# API PARA AUTOMAÇÃO DO WHATSAPP (FASE 2 - PLANEJAMENTO)     #
-# ----------------------------------------------------------- #
-
-def montar_mensagem_receptora(match):
-    """
-    Monta o texto de WhatsApp para a receptora,
-    com base no match + posto + código de retirada.
-    """
-    receiver = match.receiver
-    reference_post = receiver.reference_post if receiver else None
-    pickup_code = match.pickup_code
-
-    mensagem = (
-        f"🌷 Olá, {receiver.name}!\n"
-        f"Seu pedido foi pareado com uma doação compatível. 🫶\n\n"
-        f"Você já pode retirar o seu kit em:\n"
-        f"📍 {reference_post.name if reference_post else 'Posto não informado'}\n"
-        f"🔢 Código de retirada: {pickup_code}\n\n"
-        f"Apresente esse código no posto para receber o seu kit.\n"
-        f"Qualquer problema na retirada, fale com a gente por aqui. 💗"
-    )
-
-    return mensagem
-
-
+# ---------------- RETIRADA (PÚBLICA) ---------------- #
 @require_GET
-def api_matches(request):
-    """
-    Endpoint simples que retorna os últimos matches
-    para consumo pelo robô de WhatsApp.
-    """
-    queryset = (
-        Match.objects
-        .select_related("receiver")
-        .order_by("-id")[:50]
+def retirar(request, pickup_code: str):
+    match = get_object_or_404(
+        Match.objects.select_related("donor", "receiver", "reference_post"),
+        pickup_code=pickup_code,
     )
 
-    data = []
-    for match in queryset:
-        receiver = match.receiver
-        if not receiver or not receiver.whatsapp:
-            continue
+    qr_png_url = reverse("core:qr_pickup_png", args=[pickup_code])
 
-        data.append({
-            "name": receiver.name,
-            "phone": receiver.whatsapp,
-            "message": montar_mensagem_receptora(match),
-            "pickup_code": match.pickup_code,
-        })
-
-    return JsonResponse(
-        {"matches": data},
-        json_dumps_params={"ensure_ascii": False},
+    return render(
+        request,
+        "core/retirar.html",
+        {
+            "match": match,
+            "qr_png_url": qr_png_url,
+        },
     )
+
+
+@require_POST
+def confirmar_retirada(request, pickup_code: str):
+    match = get_object_or_404(Match, pickup_code=pickup_code)
+
+    if not match.is_completed:
+        match.is_completed = True
+        if hasattr(match, "completed_at"):
+            match.completed_at = timezone.now()
+            match.save(update_fields=["is_completed", "completed_at"])
+        else:
+            match.save(update_fields=["is_completed"])
+
+    return redirect("core:retirar", pickup_code=pickup_code)
+
+
+# ---------------- QR CODE PNG ---------------- #
+@require_GET
+def qr_pickup_png(request, pickup_code: str):
+    """
+    Retorna um PNG do QR Code que aponta para a página pública /retirar/<pickup_code>/
+    """
+    get_object_or_404(Match, pickup_code=pickup_code)
+
+    retirar_url = request.build_absolute_uri(
+        reverse("core:retirar", args=[pickup_code])
+    )
+
+    qr = qrcode.QRCode(
+        version=2,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(retirar_url)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    png_bytes = buffer.getvalue()
+
+    response = HttpResponse(png_bytes, content_type="image/png")
+    response["Cache-Control"] = "no-store, max-age=0"
+    return response

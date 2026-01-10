@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>Retirada do Kit</title>
+</head>
+<body>
+  <h1>Retirada do Kit</h1>
+
+  <p><b>Código:</b> {{ match.pickup_code }}</p>
+  <p><b>Posto:</b> {{ match.reference_post.name }}</p>
+  <p><b>Receptora:</b> {{ match.receiver.name }}</p>
+  <p><b>Doadora:</b> {{ match.donor.name }}</p>
+
+  <p><b>QR Code:</b></p>
+  <img src="{{ qr_png_url }}" alt="QR Code de retirada" width="260" height="260">
+
+  {% if match.is_completed %}
+    <h2 style="color: green;">✅ Retirada já confirmada</h2>
+  {% else %}
+    <h2 style="color: orange;">🟡 Pendente de retirada</h2>
+    <form method="post" action="{% url 'core:confirmar_retirada' match.pickup_code %}">
+      {% csrf_token %}
+      <button type="submit">Confirmar retirada</button>
+    </form>
+  {% endif %}
+</body>
+</html>
