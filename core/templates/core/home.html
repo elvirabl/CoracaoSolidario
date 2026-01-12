@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coração Solidário</title>
 
     <style>
@@ -24,12 +25,12 @@
 
         h1 {
             color: #c0396b;
-            font-size: 3rem;
+            font-size: 2.4rem;
             margin-bottom: 10px;
         }
 
         p {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             max-width: 600px;
             margin-bottom: 30px;
         }
@@ -38,35 +39,23 @@
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .btn {
             text-decoration: none;
-            padding: 18px 30px;
+            padding: 16px 26px;
             border-radius: 40px;
             font-size: 1.1rem;
             font-weight: bold;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-
-        .btn-doar {
-            background: #c0396b;
             color: #fff;
         }
 
-        .btn-receber {
-            background: #27ae60;
-            color: #fff;
-        }
+        .btn-doar { background: #c0396b; }
+        .btn-receber { background: #27ae60; }
 
         footer {
-            position: absolute;
-            bottom: 15px;
+            margin-top: 40px;
             font-size: 0.85rem;
             color: #888;
         }
@@ -74,28 +63,23 @@
 </head>
 
 <body>
-    <div class="container">
-        <h1>💗 Coração Solidário</h1>
+<div class="container">
+    <h1>💗 Coração Solidário</h1>
 
-        <p>
-            Um projeto de cuidado, empatia e apoio.
-            Aqui, quem pode ajudar encontra quem precisa — com dignidade,
-            organização e amor.
-        </p>
+    <p>
+        Um projeto de cuidado, empatia e apoio.
+        Aqui, quem pode ajudar encontra quem precisa —
+        com dignidade, organização e amor.
+    </p>
 
-        <div class="buttons">
-            <a href="{% url 'core:doar' %}" class="btn btn-doar">
-                💗 Quero Doar
-            </a>
-
-            <a href="{% url 'core:receber' %}" class="btn btn-receber">
-                🤲 Preciso Receber
-            </a>
-        </div>
+    <div class="buttons">
+        <a href="{% url 'core:doar' %}" class="btn btn-doar">💗 Quero Doar</a>
+        <a href="{% url 'core:receber' %}" class="btn btn-receber">🤲 Preciso Receber</a>
     </div>
 
     <footer>
         Mulheres ajudando mulheres • Coração Solidário
     </footer>
+</div>
 </body>
 </html>

@@ -1,28 +1,67 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8" />
-  <title>Retirada do Kit</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retirada do Kit</title>
+
+    {% if not match.is_completed %}
+    <meta http-equiv="refresh" content="8">
+    {% endif %}
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f7f7f7;
+            padding: 20px;
+        }
+
+        .card {
+            max-width: 420px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,.15);
+            text-align: center;
+        }
+
+        h1 { color: #333; }
+
+        .status-ok { color: green; font-weight: bold; }
+        .status-pendente { color: orange; font-weight: bold; }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            border-radius: 30px;
+            border: none;
+            background: #27ae60;
+            color: #fff;
+            font-size: 1rem;
+        }
+    </style>
 </head>
+
 <body>
-  <h1>Retirada do Kit</h1>
+<div class="card">
+    <h1>📦 Retirada do Kit</h1>
 
-  <p><b>Código:</b> {{ match.pickup_code }}</p>
-  <p><b>Posto:</b> {{ match.reference_post.name }}</p>
-  <p><b>Receptora:</b> {{ match.receiver.name }}</p>
-  <p><b>Doadora:</b> {{ match.donor.name }}</p>
+    <p><b>Código:</b> {{ match.pickup_code }}</p>
+    <p><b>Posto:</b> {{ match.reference_post.name }}</p>
+    <p><b>Receptora:</b> {{ match.receiver.name }}</p>
 
-  <p><b>QR Code:</b></p>
-  <img src="{{ qr_png_url }}" alt="QR Code de retirada" width="260" height="260">
+    <img src="{{ qr_png_url }}" width="220">
 
-  {% if match.is_completed %}
-    <h2 style="color: green;">✅ Retirada já confirmada</h2>
-  {% else %}
-    <h2 style="color: orange;">🟡 Pendente de retirada</h2>
-    <form method="post" action="{% url 'core:confirmar_retirada' match.pickup_code %}">
-      {% csrf_token %}
-      <button type="submit">Confirmar retirada</button>
-    </form>
-  {% endif %}
+    {% if match.is_completed %}
+        <p class="status-ok">✅ Retirada confirmada</p>
+    {% else %}
+        <p class="status-pendente">⏳ Aguardando retirada</p>
+        <form method="post" action="{% url 'core:confirmar_retirada' match.pickup_code %}">
+            {% csrf_token %}
+            <button type="submit">Confirmar retirada</button>
+        </form>
+    {% endif %}
+</div>
 </body>
 </html>

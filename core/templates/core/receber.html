@@ -1,132 +1,127 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Preciso receber um kit • Coração Solidário</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Receber • Coração Solidário</title>
 
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #ffeef5;
-            font-family: 'Segoe UI', sans-serif;
-            color: #333;
-        }
-        .page {
-            max-width: 480px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .logo {
-            display: block;
-            width: 140px;
-            margin: 10px auto 10px auto;
-        }
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 18px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.06);
-            margin-top: 10px;
-        }
-        h1 {
-            text-align: center;
-            font-size: 20px;
-            margin-bottom: 8px;
-        }
-        p.subtitle {
-            text-align: center;
-            font-size: 14px;
-            color: #555;
-        }
-        label {
-            display: block;
-            font-size: 14px;
-            margin-top: 12px;
-            margin-bottom: 4px;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid #ddd;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        .btn-primary {
-            margin-top: 18px;
-            width: 100%;
-            padding: 14px;
-            border-radius: 999px;
-            border: none;
-            background: #e46ba0;
-            color: white;
-            font-weight: bold;
-            font-size: 15px;
-            cursor: pointer;
-        }
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 14px;
-            font-size: 14px;
-            color: #d15bff;
-            text-decoration: none;
-        }
-    </style>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #ecf9f1, #ffffff);
+      color: #444;
+      padding: 20px;
+    }
+
+    .card {
+      max-width: 460px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 26px 22px;
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+
+    h1 {
+      text-align: center;
+      color: #27ae60;
+      margin: 0 0 18px;
+      font-size: 2rem;
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      font-weight: bold;
+      font-size: 1.05rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 14px 12px;
+      margin-top: 6px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 1.05rem;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 14px;
+      border: none;
+      border-radius: 999px;
+      background: #27ae60;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover { background: #219150; }
+
+    .errors {
+      background: #ffe6e6;
+      color: #a94442;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+
+    .back {
+      display: block;
+      text-align: center;
+      margin-top: 14px;
+      font-size: 1rem;
+      text-decoration: none;
+      font-weight: bold;
+      color: #27ae60;
+    }
+  </style>
 </head>
+
 <body>
-<div class="page">
-    <img src="{% static 'core/logo-coracao-solidario.png' %}" alt="Coração Solidário" class="logo">
+  <div class="card">
+    <h1>🤲 Preciso Receber</h1>
 
-    <div class="card">
-        <h1>Preciso receber um kit 🤍</h1>
-        <p class="subtitle">
-            Se você está em pós-cirurgia ou tratamento de câncer de mama,
-            preencha seus dados para que possamos buscar uma doadora
-            pelo posto do seu bairro.
-        </p>
+    {% if errors %}
+      <div class="errors">
+        <ul>
+          {% for e in errors %}
+            <li>{{ e }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
 
-        <form method="post">
-            {% csrf_token %}
-            <label for="name">Nome completo</label>
-            <input id="name" name="name" type="text" required>
+    <form method="post">
+      {% csrf_token %}
 
-            <label for="whatsapp">WhatsApp</label>
-            <input id="whatsapp" name="whatsapp" type="tel" required>
+      <label for="name">Nome completo</label>
+      <input id="name" name="name" type="text" required value="{{ form.name|default_if_none:'' }}">
 
-            <label for="city">Cidade</label>
-            <input id="city" name="city" type="text" required>
+      <label for="whatsapp">WhatsApp</label>
+      <input id="whatsapp" name="whatsapp" type="text" required placeholder="(15) 9xxxx-xxxx" value="{{ form.whatsapp|default_if_none:'' }}">
 
-            <label for="neighborhood">Bairro</label>
-            <input id="neighborhood" name="neighborhood" type="text" required>
+      <label for="kit_type">Tipo de kit necessário</label>
+      <select id="kit_type" name="kit_type" required>
+        <option value="">Selecione</option>
+        <option value="Basico">Básico</option>
+        <option value="Basico Alergica">Básico (Alérgica)</option>
+        <option value="Completo">Completo</option>
+        <option value="Completo Alergica">Completo (Alérgica)</option>
+      </select>
 
-            <label for="kit">Qual kit você precisa?</label>
-            <select id="kit" name="needed_kit" required>
-                <option value="">Selecione...</option>
-                <option value="KIT_BASICO">Kit Básico</option>
-                <option value="KIT_BASICO_ALERGICA">Kit Básico Alérgica</option>
-                <option value="KIT_COMPLETO">Kit Completo</option>
-                <option value="KIT_COMPLETO_ALERGICA">Kit Completo Alérgica</option>
-            </select>
+      <label for="reference_post">Posto de referência</label>
+      <select id="reference_post" name="reference_post" required>
+        <option value="">Selecione</option>
+        {% for post in reference_posts %}
+          <option value="{{ post.id }}">{{ post.name }} — {{ post.city }}</option>
+        {% endfor %}
+      </select>
 
-            <label for="reference_post">Posto de referência (se já tiver)</label>
-            <select id="reference_post" name="reference_post">
-                <option value="">Não sei / quero ajuda para definir</option>
-                {% for p in reference_posts %}
-                    <option value="{{ p.id }}">{{ p.name }} – {{ p.city }}</option>
-                {% endfor %}
-            </select>
-
-            <button class="btn-primary" type="submit">
-                Enviar meu pedido de kit
-            </button>
-        </form>
-
-        <a href="/" class="back-link">← Voltar para a página inicial</a>
-    </div>
-</div>
-</body>
-</html>
+      <button type="submit">Cadastrar pedido</button>
+    </fo
