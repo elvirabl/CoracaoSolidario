@@ -70,3 +70,5 @@ coracaoSolidario/
       |── Receptor.js
       |── Server.js
          └── Index.js/
+         Changes not staged for commit:
+modified: README.md
