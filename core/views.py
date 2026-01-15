@@ -1,6 +1,8 @@
+# core/views.py
 from io import BytesIO
 
 import qrcode
+from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -8,6 +10,31 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from .models import Donor, Match, Receiver, ReferencePost
+from .utils.validators import normalize_phone_br, contains_bad_words
+
+
+def rate_limit_or_429(request, key_prefix: str, limit: int = 5, window_sec: int = 300) -> bool:
+    """
+    True = BLOQUEAR (excedeu limite)
+    False = OK
+    """
+    ip = request.META.get("REMOTE_ADDR", "unknown")
+    key = f"{key_prefix}:{ip}"
+    current = cache.get(key, 0)
+
+    if current >= limit:
+        return True
+
+    if current == 0:
+        cache.set(key, 1, timeout=window_sec)
+    else:
+        try:
+            cache.incr(key)
+        except Exception:
+            # caso o backend de cache não suporte incr
+            cache.set(key, int(current) + 1, timeout=window_sec)
+
+    return False
 
 
 # ---------------- HOME ---------------- #
@@ -24,8 +51,16 @@ def doar(request):
     ).order_by("city", "name")
 
     if request.method == "POST":
+        # Anti-spam: 5 tentativas por 5 minutos por IP
+        if rate_limit_or_429(request, "form_doar", limit=5, window_sec=300):
+            return HttpResponseTooManyRequests(
+                "Muitas tentativas. Aguarde alguns minutos e tente novamente."
+            )
+
         name = (request.POST.get("name") or "").strip()
-        whatsapp = (request.POST.get("whatsapp") or "").strip()
+
+        whatsapp_raw = (request.POST.get("whatsapp") or "").strip()
+        whatsapp = normalize_phone_br(whatsapp_raw)
 
         # Aceita qualquer name usado no HTML
         preferred_kit = (
@@ -44,11 +79,15 @@ def doar(request):
         if not name:
             errors.append("Nome é obrigatório.")
         if not whatsapp:
-            errors.append("WhatsApp é obrigatório.")
+            errors.append("WhatsApp inválido. Ex: (15) 99123-4567")
         if not preferred_kit:
             errors.append("Selecione o tipo de kit.")
         if not reference_post_id:
             errors.append("Selecione o posto de referência.")
+
+        # Proteção contra palavras maliciosas/ofensivas
+        if contains_bad_words(name, preferred_kit, whatsapp_raw):
+            errors.append("Por segurança, revise o texto informado.")
 
         reference_post = None
         if reference_post_id:
@@ -59,7 +98,7 @@ def doar(request):
         if not errors:
             Donor.objects.create(
                 name=name,
-                whatsapp=whatsapp,
+                whatsapp=whatsapp,  # <- normalizado (só dígitos)
                 preferred_kit=preferred_kit,
                 reference_post=reference_post,
                 active=True,
@@ -88,8 +127,18 @@ def receber(request):
     ).order_by("city", "name")
 
     if request.method == "POST":
+        # Anti-spam: 5 tentativas por 5 minutos por IP
+        if rate_limit_or_429(request, "form_receber", limit=5, window_sec=300):
+            return HttpResponse(
+              "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+               status=429
+)
+
+
         name = (request.POST.get("name") or "").strip()
-        whatsapp = (request.POST.get("whatsapp") or "").strip()
+
+        whatsapp_raw = (request.POST.get("whatsapp") or "").strip()
+        whatsapp = normalize_phone_br(whatsapp_raw)
 
         needed_kit = (
             request.POST.get("needed_kit")
@@ -107,11 +156,15 @@ def receber(request):
         if not name:
             errors.append("Nome é obrigatório.")
         if not whatsapp:
-            errors.append("WhatsApp é obrigatório.")
+            errors.append("WhatsApp inválido. Ex: (15) 99123-4567")
         if not needed_kit:
             errors.append("Selecione o tipo de kit.")
         if not reference_post_id:
             errors.append("Selecione o posto de referência.")
+
+        # Proteção contra palavras maliciosas/ofensivas
+        if contains_bad_words(name, needed_kit, whatsapp_raw):
+            errors.append("Por segurança, revise o texto informado.")
 
         reference_post = None
         if reference_post_id:
@@ -122,7 +175,7 @@ def receber(request):
         if not errors:
             Receiver.objects.create(
                 name=name,
-                whatsapp=whatsapp,
+                whatsapp=whatsapp,  # <- normalizado (só dígitos)
                 needed_kit=needed_kit,
                 reference_post=reference_post,
                 active=True,
