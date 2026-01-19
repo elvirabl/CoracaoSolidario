@@ -72,3 +72,18 @@ coracaoSolidario/
          └── Index.js/
          Changes not staged for commit:
 modified: README.md
+## ✅ Status do Projeto
+
+### Caixa 1 — Estrutura base
+- Admin configurado
+- Models funcionando
+- Migrações ok
+
+### Caixa 2 — Cadastro público (MVP)
+- Formulário Doar funcionando
+- Formulário Receber funcionando
+- Tela Obrigada reutilizável
+- Proteção contra duplo clique
+- Validações básicas e rate limit
+
+✅ O app já roda de ponta a ponta (cadastro → salvamento → resposta).
