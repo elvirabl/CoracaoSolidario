@@ -87,3 +87,35 @@ modified: README.md
 - Validações básicas e rate limit
 
 ✅ O app já roda de ponta a ponta (cadastro → salvamento → resposta).
+
+19/01/26
+# Coração Solidário ❤️
+
+Plataforma para cadastro de doações e receptoras de kits, com **matching controlado (MVP)** e fluxo de retirada com **código + QR Code**.
+
+## Visão geral
+
+O app permite:
+
+- Cadastro público de **Doadoras** (`/doar/`)
+- Cadastro público de **Receptoras** (`/receber/`)
+- Criação de **Match** entre doadora e receptora (controlado)
+- Geração automática de **pickup_code** no Match
+- Página pública de retirada: `/retirar/<pickup_code>/`
+- Confirmação de retirada (marca como entregue)
+
+## Stack
+
+- Python 3.x
+- Django
+- SQLite (MVP)
+- QRCode (`qrcode`)
+
+---
+
+## Como rodar localmente
+
+### 1) Clonar e entrar na pasta
+```bash
+git clone <SEU_REPO_URL>
+cd CoracaoSolidario

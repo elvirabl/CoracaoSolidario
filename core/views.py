@@ -1,7 +1,7 @@
 # core/views.py
 from io import BytesIO
-
 import qrcode
+
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -11,6 +11,16 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from .models import Donor, Match, Receiver, ReferencePost
 from .utils.validators import normalize_phone_br, contains_bad_words
+
+
+# ---------------- UTILIDADES ---------------- #
+
+def donor_has_open_match(donor: Donor) -> bool:
+    return Match.objects.filter(donor=donor, is_completed=False).exists()
+
+
+def receiver_has_open_match(receiver: Receiver) -> bool:
+    return Match.objects.filter(receiver=receiver, is_completed=False).exists()
 
 
 def rate_limit_or_429(request, key_prefix: str, limit: int = 5, window_sec: int = 300) -> bool:
@@ -31,18 +41,19 @@ def rate_limit_or_429(request, key_prefix: str, limit: int = 5, window_sec: int 
         try:
             cache.incr(key)
         except Exception:
-            # caso o backend de cache não suporte incr
             cache.set(key, int(current) + 1, timeout=window_sec)
 
     return False
 
 
 # ---------------- HOME ---------------- #
+
 def home(request):
     return render(request, "core/home.html")
 
 
-# --------- TELAS PÚBLICAS: DOAR ---------------- #
+# ---------------- DOAR ---------------- #
+
 @require_http_methods(["GET", "POST"])
 def doar(request):
     reference_posts = ReferencePost.objects.filter(
@@ -51,21 +62,17 @@ def doar(request):
     ).order_by("city", "name")
 
     if request.method == "POST":
-        # Anti-spam: 5 tentativas por 5 minutos por IP
         if rate_limit_or_429(request, "form_doar", limit=5, window_sec=300):
             return HttpResponse(
-            "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
-            status=429
-)
-
+                "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+                status=429
+            )
 
         name = (request.POST.get("name") or "").strip()
-
         whatsapp_raw = (request.POST.get("whatsapp") or "").strip()
         whatsapp = normalize_phone_br(whatsapp_raw)
 
-        # Aceita qualquer name usado no HTML
-        preferred_kit = (
+        kit_type = (
             request.POST.get("preferred_kit")
             or request.POST.get("kit_type")
             or request.POST.get("kit")
@@ -78,17 +85,17 @@ def doar(request):
         )
 
         errors = []
+
         if not name:
             errors.append("Nome é obrigatório.")
         if not whatsapp:
             errors.append("WhatsApp inválido. Ex: (15) 99123-4567")
-        if not preferred_kit:
+        if not kit_type:
             errors.append("Selecione o tipo de kit.")
         if not reference_post_id:
             errors.append("Selecione o posto de referência.")
 
-        # Proteção contra palavras maliciosas/ofensivas
-        if contains_bad_words(name, preferred_kit, whatsapp_raw):
+        if contains_bad_words(name, kit_type, whatsapp_raw):
             errors.append("Por segurança, revise o texto informado.")
 
         reference_post = None
@@ -97,30 +104,74 @@ def doar(request):
             if not reference_post:
                 errors.append("Posto de referência inválido.")
 
-        if not errors:
-            Donor.objects.create(
-                name=name,
-                whatsapp=whatsapp,  # <- normalizado (só dígitos)
-                preferred_kit=preferred_kit,
-                reference_post=reference_post,
-                active=True,
+        if errors:
+            return render(
+                request,
+                "core/doar.html",
+                {
+                    "reference_posts": reference_posts,
+                    "errors": errors,
+                    "form": request.POST,
+                },
             )
-            return render(request, "core/obrigada.html", {"tipo": "doacao"})
 
-        return render(
-            request,
-            "core/doar.html",
-            {
-                "reference_posts": reference_posts,
-                "errors": errors,
-                "form": request.POST,
-            },
+        # cria doador
+        donor = Donor.objects.create(
+            name=name,
+            whatsapp=whatsapp,
+            kit_type=kit_type,
+            active=True,
         )
+
+        # bloqueio: doador já tem match pendente
+        if donor_has_open_match(donor):
+            return render(request, "core/obrigada.html", {
+                "tipo": "doacao",
+                "title": "Doação já registrada 💛",
+                "message": "Você já possui uma doação em andamento. Assim que ela for concluída, poderá doar novamente.",
+            })
+
+        # procura receptora compatível
+        receiver = (
+            Receiver.objects
+            .filter(
+                active=True,
+                needed_kit=donor.kit_type,
+                reference_post=reference_post,
+            )
+            .exclude(
+                id__in=Match.objects.filter(is_completed=False)
+                .values_list("receiver_id", flat=True)
+            )
+            .order_by("created_at")
+            .first()
+        )
+
+        if receiver:
+            match = Match.objects.create(
+                donor=donor,
+                receiver=receiver,
+                reference_post=reference_post,
+            )
+            return render(request, "core/obrigada.html", {
+                "tipo": "doacao",
+                "title": "Doação confirmada 💛",
+                "message": f"Seu código de retirada é:",
+                "pickup_code": match.pickup_code,
+            })
+
+        # se não achou receptora agora
+        return render(request, "core/obrigada.html", {
+            "tipo": "doacao",
+            "title": "Doação registrada 💛",
+            "message": "Assim que houver uma receptora compatível no posto escolhido, o match será feito.",
+        })
 
     return render(request, "core/doar.html", {"reference_posts": reference_posts})
 
 
-# --------- TELAS PÚBLICAS: RECEBER ---------------- #
+# ---------------- RECEBER ---------------- #
+
 @require_http_methods(["GET", "POST"])
 def receber(request):
     reference_posts = ReferencePost.objects.filter(
@@ -129,18 +180,18 @@ def receber(request):
     ).order_by("city", "name")
 
     if request.method == "POST":
-        # Anti-spam: 5 tentativas por 5 minutos por IP
         if rate_limit_or_429(request, "form_receber", limit=5, window_sec=300):
             return HttpResponse(
-              "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
-               status=429
-)
-
+                "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+                status=429
+            )
 
         name = (request.POST.get("name") or "").strip()
-
         whatsapp_raw = (request.POST.get("whatsapp") or "").strip()
         whatsapp = normalize_phone_br(whatsapp_raw)
+
+        city = (request.POST.get("city") or "").strip()
+        neighborhood = (request.POST.get("neighborhood") or "").strip()
 
         needed_kit = (
             request.POST.get("needed_kit")
@@ -155,16 +206,20 @@ def receber(request):
         )
 
         errors = []
+
         if not name:
             errors.append("Nome é obrigatório.")
         if not whatsapp:
-            errors.append("WhatsApp inválido. Ex: (15) 99123-4567")
+            errors.append("WhatsApp inválido.")
+        if not city:
+            errors.append("Cidade é obrigatória.")
+        if not neighborhood:
+            errors.append("Bairro é obrigatório.")
         if not needed_kit:
             errors.append("Selecione o tipo de kit.")
         if not reference_post_id:
             errors.append("Selecione o posto de referência.")
 
-        # Proteção contra palavras maliciosas/ofensivas
         if contains_bad_words(name, needed_kit, whatsapp_raw):
             errors.append("Por segurança, revise o texto informado.")
 
@@ -174,30 +229,34 @@ def receber(request):
             if not reference_post:
                 errors.append("Posto de referência inválido.")
 
-        if not errors:
-            Receiver.objects.create(
-                name=name,
-                whatsapp=whatsapp,  # <- normalizado (só dígitos)
-                needed_kit=needed_kit,
-                reference_post=reference_post,
-                active=True,
+        if errors:
+            return render(
+                request,
+                "core/receber.html",
+                {
+                    "reference_posts": reference_posts,
+                    "errors": errors,
+                    "form": request.POST,
+                },
             )
-            return render(request, "core/obrigada.html", {"tipo": "recebimento"})
 
-        return render(
-            request,
-            "core/receber.html",
-            {
-                "reference_posts": reference_posts,
-                "errors": errors,
-                "form": request.POST,
-            },
+        receiver = Receiver.objects.create(
+            name=name,
+            whatsapp=whatsapp,
+            city=city,
+            neighborhood=neighborhood,
+            needed_kit=needed_kit,
+            reference_post=reference_post,
+            active=True,
         )
+
+        return render(request, "core/obrigada.html", {"tipo": "recebimento"})
 
     return render(request, "core/receber.html", {"reference_posts": reference_posts})
 
 
-# ---------------- RETIRADA (PÚBLICA) ---------------- #
+# ---------------- RETIRADA ---------------- #
+
 @require_GET
 def retirar(request, pickup_code: str):
     match = get_object_or_404(
@@ -223,21 +282,15 @@ def confirmar_retirada(request, pickup_code: str):
 
     if not match.is_completed:
         match.is_completed = True
-        if hasattr(match, "completed_at"):
-            match.completed_at = timezone.now()
-            match.save(update_fields=["is_completed", "completed_at"])
-        else:
-            match.save(update_fields=["is_completed"])
+        match.save(update_fields=["is_completed"])
 
     return redirect("core:retirar", pickup_code=pickup_code)
 
 
 # ---------------- QR CODE PNG ---------------- #
+
 @require_GET
 def qr_pickup_png(request, pickup_code: str):
-    """
-    Retorna um PNG do QR Code que aponta para a página pública /retirar/<pickup_code>/
-    """
     get_object_or_404(Match, pickup_code=pickup_code)
 
     retirar_url = request.build_absolute_uri(
