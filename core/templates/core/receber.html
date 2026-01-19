@@ -60,7 +60,10 @@
       cursor: pointer;
     }
 
-    button:hover { background: #219150; }
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
 
     .errors {
       background: #ffe6e6;
@@ -69,16 +72,6 @@
       border-radius: 10px;
       margin-bottom: 12px;
       font-size: 1rem;
-    }
-
-    .back {
-      display: block;
-      text-align: center;
-      margin-top: 14px;
-      font-size: 1rem;
-      text-decoration: none;
-      font-weight: bold;
-      color: #27ae60;
     }
   </style>
 </head>
@@ -97,17 +90,17 @@
       </div>
     {% endif %}
 
-    <form method="post">
+    <form method="post" onsubmit="return disableSubmit(this);">
       {% csrf_token %}
 
-      <label for="name">Nome completo</label>
-      <input id="name" name="name" type="text" required value="{{ form.name|default_if_none:'' }}">
+      <label>Nome completo</label>
+      <input name="name" type="text" required value="{{ form.name|default_if_none:'' }}">
 
-      <label for="whatsapp">WhatsApp</label>
-      <input id="whatsapp" name="whatsapp" type="text" required placeholder="(15) 9xxxx-xxxx" value="{{ form.whatsapp|default_if_none:'' }}">
+      <label>WhatsApp</label>
+      <input name="whatsapp" type="text" required value="{{ form.whatsapp|default_if_none:'' }}">
 
-      <label for="kit_type">Tipo de kit necessário</label>
-      <select id="kit_type" name="kit_type" required>
+      <label>Tipo de kit necessário</label>
+      <select name="kit_type" required>
         <option value="">Selecione</option>
         <option value="Basico">Básico</option>
         <option value="Basico Alergica">Básico (Alérgica)</option>
@@ -115,13 +108,27 @@
         <option value="Completo Alergica">Completo (Alérgica)</option>
       </select>
 
-      <label for="reference_post">Posto de referência</label>
-      <select id="reference_post" name="reference_post" required>
+      <label>Posto de referência</label>
+      <select name="reference_post" required>
         <option value="">Selecione</option>
         {% for post in reference_posts %}
           <option value="{{ post.id }}">{{ post.name }} — {{ post.city }}</option>
         {% endfor %}
       </select>
 
-      <button type="submit">Cadastrar pedido</button>
-    </fo
+      <button id="submitBtn" type="submit">Cadastrar pedido</button>
+    </form>
+  </div>
+
+<script>
+function disableSubmit(form) {
+    const btn = form.querySelector("#submitBtn");
+    if (!btn) return true;
+    btn.disabled = true;
+    btn.innerText = "Enviando...";
+    return true;
+}
+</script>
+
+</body>
+</html>

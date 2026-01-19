@@ -53,9 +53,11 @@ def doar(request):
     if request.method == "POST":
         # Anti-spam: 5 tentativas por 5 minutos por IP
         if rate_limit_or_429(request, "form_doar", limit=5, window_sec=300):
-            return HttpResponseTooManyRequests(
-                "Muitas tentativas. Aguarde alguns minutos e tente novamente."
-            )
+            return HttpResponse(
+            "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+            status=429
+)
+
 
         name = (request.POST.get("name") or "").strip()
 
