@@ -1,134 +1,147 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Receber • Coração Solidário</title>
+    <meta charset="UTF-8">
+    <title>Preciso Receber • Coração Solidário</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: linear-gradient(135deg, #ecf9f1, #ffffff);
-      color: #444;
-      padding: 20px;
-    }
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7f6;
+            margin: 0;
+            padding: 0;
+        }
 
-    .card {
-      max-width: 460px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 26px 22px;
-      border-radius: 18px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-    }
+        .container {
+            max-width: 420px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
 
-    h1 {
-      text-align: center;
-      color: #27ae60;
-      margin: 0 0 18px;
-      font-size: 2rem;
-    }
+        h1 {
+            text-align: center;
+            color: #1faa59;
+            margin-bottom: 20px;
+        }
 
-    label {
-      display: block;
-      margin-top: 14px;
-      font-weight: bold;
-      font-size: 1.05rem;
-    }
+        label {
+            display: block;
+            margin-top: 14px;
+            font-weight: bold;
+            color: #333;
+        }
 
-    input, select {
-      width: 100%;
-      padding: 14px 12px;
-      margin-top: 6px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      font-size: 1.05rem;
-      box-sizing: border-box;
-    }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
 
-    button {
-      width: 100%;
-      margin-top: 22px;
-      padding: 14px;
-      border: none;
-      border-radius: 999px;
-      background: #27ae60;
-      color: #fff;
-      font-size: 1.1rem;
-      font-weight: bold;
-      cursor: pointer;
-    }
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 14px;
+            background: #1faa59;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-    button:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
+        button:hover {
+            background: #17994f;
+        }
 
-    .errors {
-      background: #ffe6e6;
-      color: #a94442;
-      padding: 12px;
-      border-radius: 10px;
-      margin-bottom: 12px;
-      font-size: 1rem;
-    }
-  </style>
+        .errors {
+            background: #ffecec;
+            color: #b30000;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .errors ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+    </style>
 </head>
-
 <body>
-  <div class="card">
-    <h1>🤲 Preciso Receber</h1>
+
+<div class="container">
+    <h1>✋ Preciso Receber</h1>
 
     {% if errors %}
-      <div class="errors">
-        <ul>
-          {% for e in errors %}
-            <li>{{ e }}</li>
-          {% endfor %}
-        </ul>
-      </div>
+        <div class="errors">
+            <ul>
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
     {% endif %}
 
-    <form method="post" onsubmit="return disableSubmit(this);">
-      {% csrf_token %}
+    <form method="post">
+        {% csrf_token %}
 
-      <label>Nome completo</label>
-      <input name="name" type="text" required value="{{ form.name|default_if_none:'' }}">
+        <label for="name">Nome completo</label>
+        <input
+            type="text"
+            id="name"
+            name="name"
+            value="{{ form.name|default:'' }}"
+            required
+        >
 
-      <label>WhatsApp</label>
-      <input name="whatsapp" type="text" required value="{{ form.whatsapp|default_if_none:'' }}">
+        <label for="whatsapp">WhatsApp</label>
+        <input
+            type="text"
+            id="whatsapp"
+            name="whatsapp"
+            placeholder="(15) 99123-4567"
+            value="{{ form.whatsapp|default:'' }}"
+            required
+        >
 
-      <label>Tipo de kit necessário</label>
-      <select name="kit_type" required>
-        <option value="">Selecione</option>
-        <option value="Basico">Básico</option>
-        <option value="Basico Alergica">Básico (Alérgica)</option>
-        <option value="Completo">Completo</option>
-        <option value="Completo Alergica">Completo (Alérgica)</option>
-      </select>
+        <label for="city">Cidade</label>
+        <input
+            type="text"
+            id="city"
+            name="city"
+            placeholder="Ex: Sorocaba"
+            value="{{ form.city|default:'' }}"
+            required
+        >
 
-      <label>Posto de referência</label>
-      <select name="reference_post" required>
-        <option value="">Selecione</option>
-        {% for post in reference_posts %}
-          <option value="{{ post.id }}">{{ post.name }} — {{ post.city }}</option>
-        {% endfor %}
-      </select>
+        <label for="neighborhood">Bairro</label>
+        <input
+            type="text"
+            id="neighborhood"
+            name="neighborhood"
+            placeholder="Ex: Vila Jardini"
+            value="{{ form.neighborhood|default:'' }}"
+            required
+        >
 
-      <button id="submitBtn" type="submit">Cadastrar pedido</button>
-    </form>
-  </div>
-
-<script>
-function disableSubmit(form) {
-    const btn = form.querySelector("#submitBtn");
-    if (!btn) return true;
-    btn.disabled = true;
-    btn.innerText = "Enviando...";
-    return true;
-}
-</script>
-
-</body>
-</html>
+        <label for="needed_kit">Tipo de kit necessário</label>
+        <select id="needed_kit" name="needed_kit" required>
+            <option value="">Selecione</option>
+            <option value="Basico" {% if form.needed_kit == "Basico" %}selected{% endif %}>
+                Básico
+            </option>
+            <option value="Completo" {% if form.needed_kit == "Completo" %}selected{% endif %}>
+                Completo
+            </option>
+            <option value="Basico Alergia" {% if form.needed_kit == "Basico Alergia" %}selected{% endif %}>
+                Básico Alergia
+            </option>
+            <option value="Completo

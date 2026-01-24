@@ -1,13 +1,15 @@
 # core/views.py
 from io import BytesIO
 import qrcode
+import re
 
 from django.core.cache import cache
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils import timezone
+from django.utils.html import strip_tags
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
+from django.contrib.admin.views.decorators import staff_member_required
 
 from .models import Donor, Match, Receiver, ReferencePost
 from .utils.validators import normalize_phone_br, contains_bad_words
@@ -46,6 +48,20 @@ def rate_limit_or_429(request, key_prefix: str, limit: int = 5, window_sec: int 
     return False
 
 
+def clean_text(raw: str, max_len: int = 120) -> str:
+    """
+    Sanitização simples (MVP):
+    - remove HTML
+    - normaliza espaços
+    - limita tamanho
+    """
+    if not raw:
+        return ""
+    txt = strip_tags(str(raw))
+    txt = re.sub(r"\s+", " ", txt).strip()
+    return txt[:max_len]
+
+
 # ---------------- HOME ---------------- #
 
 def home(request):
@@ -68,16 +84,18 @@ def doar(request):
                 status=429
             )
 
-        name = (request.POST.get("name") or "").strip()
-        whatsapp_raw = (request.POST.get("whatsapp") or "").strip()
+        # --- CAPTURA + SANITIZAÇÃO (item 2) ---
+        name = clean_text(request.POST.get("name"), max_len=80)
+        whatsapp_raw = clean_text(request.POST.get("whatsapp"), max_len=30)
         whatsapp = normalize_phone_br(whatsapp_raw)
 
-        kit_type = (
+        kit_type = clean_text(
             request.POST.get("preferred_kit")
             or request.POST.get("kit_type")
             or request.POST.get("kit")
-            or ""
-        ).strip()
+            or "",
+            max_len=40
+        )
 
         reference_post_id = (
             request.POST.get("reference_post")
@@ -86,6 +104,7 @@ def doar(request):
 
         errors = []
 
+        # --- VALIDAÇÕES ---
         if not name:
             errors.append("Nome é obrigatório.")
         if not whatsapp:
@@ -95,8 +114,13 @@ def doar(request):
         if not reference_post_id:
             errors.append("Selecione o posto de referência.")
 
+        # filtro anti-abuso (você já tem)
         if contains_bad_words(name, kit_type, whatsapp_raw):
             errors.append("Por segurança, revise o texto informado.")
+
+        # duplicidade simples (MVP)
+        if whatsapp and Donor.objects.filter(whatsapp=whatsapp, active=True).exists():
+            errors.append("Este WhatsApp já está cadastrado como doador.")
 
         reference_post = None
         if reference_post_id:
@@ -124,6 +148,8 @@ def doar(request):
         )
 
         # bloqueio: doador já tem match pendente
+        # (OBS: com o check de duplicidade acima, isso aqui fica quase sempre desnecessário,
+        # mas mantive para não mudar seu fluxo)
         if donor_has_open_match(donor):
             return render(request, "core/obrigada.html", {
                 "tipo": "doacao",
@@ -186,19 +212,21 @@ def receber(request):
                 status=429
             )
 
-        name = (request.POST.get("name") or "").strip()
-        whatsapp_raw = (request.POST.get("whatsapp") or "").strip()
+        # --- CAPTURA + SANITIZAÇÃO (item 2) ---
+        name = clean_text(request.POST.get("name"), max_len=80)
+        whatsapp_raw = clean_text(request.POST.get("whatsapp"), max_len=30)
         whatsapp = normalize_phone_br(whatsapp_raw)
 
-        city = (request.POST.get("city") or "").strip()
-        neighborhood = (request.POST.get("neighborhood") or "").strip()
+        city = clean_text(request.POST.get("city"), max_len=40)
+        neighborhood = clean_text(request.POST.get("neighborhood"), max_len=60)
 
-        needed_kit = (
+        needed_kit = clean_text(
             request.POST.get("needed_kit")
             or request.POST.get("kit_type")
             or request.POST.get("kit")
-            or ""
-        ).strip()
+            or "",
+            max_len=40
+        )
 
         reference_post_id = (
             request.POST.get("reference_post")
@@ -207,6 +235,7 @@ def receber(request):
 
         errors = []
 
+        # --- VALIDAÇÕES ---
         if not name:
             errors.append("Nome é obrigatório.")
         if not whatsapp:
@@ -222,6 +251,10 @@ def receber(request):
 
         if contains_bad_words(name, needed_kit, whatsapp_raw):
             errors.append("Por segurança, revise o texto informado.")
+
+        # duplicidade simples (MVP)
+        if whatsapp and Receiver.objects.filter(whatsapp=whatsapp, active=True).exists():
+            errors.append("Este WhatsApp já está cadastrado como receptora.")
 
         reference_post = None
         if reference_post_id:
@@ -258,7 +291,10 @@ def receber(request):
 # ---------------- RETIRADA ---------------- #
 
 @require_GET
+@staff_member_required
+@require_GET
 def retirar(request, pickup_code: str):
+
     match = get_object_or_404(
         Match.objects.select_related("donor", "receiver", "reference_post"),
         pickup_code=pickup_code,
@@ -276,6 +312,8 @@ def retirar(request, pickup_code: str):
     )
 
 
+@require_POST
+@staff_member_required
 @require_POST
 def confirmar_retirada(request, pickup_code: str):
     match = get_object_or_404(Match, pickup_code=pickup_code)
