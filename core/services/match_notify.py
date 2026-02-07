@@ -1,11 +1,10 @@
 from django.utils import timezone
 
-
 def notify_match(match):
     """
     Envia/gera a mensagem de notificação de Match sem depender de campos antigos.
     Fonte do kit:
-      - donor.preferred_kit (doadora)
+      - donor.kit_type (doadora)
       - receiver.needed_kit (receptora)
     """
 
@@ -18,8 +17,7 @@ def notify_match(match):
     post = match.reference_post
 
     # Tipo de kit (compatível com seu modelo)
-    kit_key = donor.preferred_kit  # ou receiver.needed_kit (devem ser compatíveis)
-    kit_label = donor.get_preferred_kit_display()
+    kit_label = donor.get_kit_type_display()  # ✅ CERTO pro seu Donor
 
     # Mensagem base (você adapta pro WhatsApp depois)
     message = (

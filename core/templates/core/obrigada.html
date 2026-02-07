@@ -74,6 +74,15 @@
 </head>
 
 <body>
+  {% if messages %}
+<div style="margin: 12px auto; max-width:520px;">
+      {% for message in messages %}
+      <div style="padding:12px; border:1px solid #2ecc71; background:#e6ffe6; font-weight:bold; text-align:center; border-radius:10px;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
   <div class="container">
     <div class="card">
       {% if tipo == "doacao" %}

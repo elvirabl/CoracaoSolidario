@@ -1,8 +1,13 @@
 import uuid
+
+from django.conf import settings
 from django.db import models
-#from django.utils import timezone
+from django.contrib.auth.models import User
 
 
+# =========================
+# POSTOS DE REFERÊNCIA
+# =========================
 class ReferencePost(models.Model):
     name = models.CharField("Nome do posto", max_length=150)
     city = models.CharField("Cidade", max_length=100)
@@ -40,6 +45,9 @@ class ReferencePost(models.Model):
         return f"{self.name} - {self.city}"
 
 
+# =========================
+# DOADOR
+# =========================
 class Donor(models.Model):
     KIT_CHOICES = (
         ("BASICO", "Kit Básico"),
@@ -61,6 +69,10 @@ class Donor(models.Model):
     def __str__(self):
         return f"{self.name} ({self.get_kit_type_display()})"
 
+
+# =========================
+# RECEPTORA
+# =========================
 class Receiver(models.Model):
     KIT_CHOICES = Donor.KIT_CHOICES
 
@@ -93,6 +105,9 @@ class Receiver(models.Model):
         return f"{self.name} ({self.get_needed_kit_display()})"
 
 
+# =========================
+# MATCH (DOAÇÃO)
+# =========================
 class Match(models.Model):
     donor = models.ForeignKey(
         Donor,
@@ -138,3 +153,41 @@ class Match(models.Model):
     def __str__(self):
         status = "ENTREGUE" if self.is_completed else "PENDENTE"
         return f"{self.receiver.name} ← {self.donor.name} ({self.pickup_code}) [{status}]"
+
+
+# =========================
+# PERFIL DE USUÁRIO (CAIXA C)
+# =========================
+class UserProfile(models.Model):
+    ROLE_CHOICES = [
+        ("admin", "Administrador"),
+        ("manager", "Gestor do Posto"),
+        ("operator", "Operador"),
+        ("auditor", "Auditor"),
+    ]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="profile"
+    )
+
+    reference_post = models.ForeignKey(
+        ReferencePost,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name="Posto vinculado"
+    )
+
+    role = models.CharField(
+        "Perfil",
+        max_length=30,
+        choices=ROLE_CHOICES,
+        default="operator"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} ({self.role})"

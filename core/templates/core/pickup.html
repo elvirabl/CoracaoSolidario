@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retirada • Coração Solidário</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#f6f7fb; margin:0; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 18px; }
+    .card { background:#fff; border-radius:16px; padding:18px; box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+    h1 { font-size: 22px; margin: 0 0 10px; }
+    .sub { color:#555; margin:0 0 18px; font-size: 15px; }
+    label { display:block; font-weight:700; margin: 10px 0 6px; font-size: 16px; }
+    input[type="text"] { width:100%; padding:14px 12px; font-size:18px; border-radius:12px; border:1px solid #d7dbe7; }
+    button { width:100%; padding:14px 12px; font-size:18px; border-radius:12px; border:none; cursor:pointer; font-weight:800; }
+    .btn { background:#111827; color:#fff; margin-top:12px; }
+    .btn2 { background:#16a34a; color:#fff; margin-top:12px; }
+    .muted { color:#6b7280; font-size: 13px; margin-top: 10px; }
+    .alert { padding:12px; border-radius:12px; margin:12px 0; font-weight:700; }
+    .ok { background:#dcfce7; color:#14532d; }
+    .bad { background:#fee2e2; color:#7f1d1d; }
+    .info { background:#e0f2fe; color:#075985; }
+    .grid { display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+    .row { background:#f9fafb; border:1px solid #eef2ff; border-radius:12px; padding:12px; }
+    .k { color:#6b7280; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+    .v { font-size:16px; font-weight:800; margin-top:4px; }
+    @media (min-width: 720px) {
+      h1 { font-size: 26px; }
+      input[type="text"], button { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Retirada com dupla confirmação</h1>
+      <p class="sub">1) Verifique o código. 2) Confirme a entrega. Sem as duas etapas, não conclui.</p>
+
+      {% if msg %}
+        <div class="alert {{ msg_class }}">{{ msg }}</div>
+      {% endif %}
+
+      <!-- ETAPA 1: Verificar código -->
+      <form method="post" action="{% url 'pickup-check' %}">
+        {% csrf_token %}
+        <label for="pickup_code">Código de retirada</label>
+        <input
+          id="pickup_code"
+          name="pickup_code"
+          type="text"
+          value="{{ pickup_code|default:'' }}"
+          placeholder="Ex: CS-2F9A7C"
+          autocomplete="off"
+          required
+        />
+        <button class="btn" type="submit">Verificar</button>
+        <div class="muted">Dica: se vier por WhatsApp, copie e cole aqui.</div>
+      </form>
+
+      {% if match %}
+        <hr style="border:none; border-top:1px solid #e5e7eb; margin:18px 0;" />
+
+        <div class="alert info">Código válido. Confira os dados e confirme a retirada.</div>
+
+        <div class="grid">
+          <div class="row">
+            <div class="k">Doadora</div>
+            <div class="v">{{ match.donor.name }}</div>
+          </div>
+          <div class="row">
+            <div class="k">Recebedora</div>
+            <div class="v">{{ match.receiver.name }}</div>
+          </div>
+          <div class="row">
+            <div class="k">Posto / Referência</div>
+            <div class="v">{{ match.reference_post.name }} — {{ match.reference_post.city }}</div>
+          </div>
+          <div class="row">
+            <div class="k">Status</div>
+            <div class="v">{% if match.is_completed %}Já retirado{% else %}Pendente{% endif %}</div>
+          </div>
+        </div>
+
+        {% if not match.is_completed %}
+          <!-- ETAPA 2: Confirmar retirada -->
+          <form method="post" action="{% url 'pickup-confirm' %}" style="margin-top:14px;">
+            {% csrf_token %}
+            <input type="hidden" name="match_id" value="{{ match.id }}" />
+            <input type="hidden" name="pickup_code" value="{{ pickup_code }}" />
+            <button class="btn2" type="submit">Confirmar retirada</button>
+            <div class="muted">Ao confirmar, o código é travado e a retirada fica registrada.</div>
+          </form>
+        {% else %}
+          <div class="alert ok" style="margin-top:12px;">Este match já foi concluído anteriormente.</div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
